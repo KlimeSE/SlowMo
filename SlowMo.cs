@@ -36,7 +36,6 @@ namespace SlowMo
         int timer = 0;
 
         Dictionary<uint, MyParticleEffectData> particleStore = new Dictionary<uint, MyParticleEffectData>();
-        List<MyParticleEffect> allCurrentEffects = new List<MyParticleEffect>();
 
         MySoundPair timeWarpDown;
         MySoundPair timeWarpUp;
@@ -104,10 +103,7 @@ namespace SlowMo
 
             if (currentSlowState == SlowdownState.Slow)
             {
-                allCurrentEffects.Clear();
-                allCurrentEffects = MyParticlesManager.Effects.ToList();
-
-                foreach (var effect in allCurrentEffects)
+                foreach (var effect in MyParticlesManager.Effects)
                 {
                     if (!particleStore.ContainsKey(effect.Id))
                     {
@@ -137,10 +133,7 @@ namespace SlowMo
 
                 MyFakes.SIMULATION_SPEED = 1;
 
-                allCurrentEffects.Clear();
-                allCurrentEffects = MyParticlesManager.Effects.ToList();
-
-                foreach (var effect in allCurrentEffects)
+                foreach (var effect in MyParticlesManager.Effects)
                 {
                     if (particleStore.ContainsKey(effect.Id))
                     {
