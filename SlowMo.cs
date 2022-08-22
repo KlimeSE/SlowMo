@@ -1,13 +1,11 @@
 ﻿using Sandbox.Engine.Utils;
-using Sandbox.Game;
 using Sandbox.Game.Entities;
-using Sandbox.Game.Entities.Cube;
+using Sandbox.Game.Entities.Character;
 using Sandbox.Game.World;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using VRage;
 using VRage.Game;
 using VRage.Game.Components;
 using VRage.Game.Entity;
@@ -15,7 +13,8 @@ using VRage.Game.ModAPI;
 using VRage.Input;
 using VRage.Plugins;
 using VRage.Render.Particles;
-using VRage.Utils;
+using HarmonyLib;
+using System.Reflection;
 
 namespace SlowMo
 {
@@ -69,7 +68,7 @@ namespace SlowMo
                 validInputThisTick = false;
             }
 
-            if (validInputThisTick && MyAPIGateway.Input.IsNewKeyPressed(MyKeys.F2))
+            if (validInputThisTick && MyAPIGateway.Input.IsNewKeyPressed(MyKeys.R))
             {
                 if (currentSlowState == SlowdownState.Idle)
                 {
@@ -90,14 +89,15 @@ namespace SlowMo
             {
                 if (MyAPIGateway.Session?.Player?.Character != null)
                 {
-                    var charac = MyAPIGateway.Session.Player.Character;
-                    MyEntity charent = charac as MyEntity;
+                    var characSound = MyAPIGateway.Session.Player.Character;
+                    MyEntity charent = characSound as MyEntity;
                     emitter = new MyEntity3DSoundEmitter(charent);
                     emitter.SetPosition(MyAPIGateway.Session.Camera.WorldMatrix.Translation);
                     emitter.PlaySound(timeWarpDown);
                 }
 
                 MyFakes.SIMULATION_SPEED = simSlow;
+                MyFakes.CHARACTER_ANIMATION_SPEED = simSlow;
                 currentSlowState = SlowdownState.Slow;
             }
 
@@ -124,15 +124,15 @@ namespace SlowMo
             {
                 if (MyAPIGateway.Session?.Player.Character != null)
                 {
-                    var charac = MyAPIGateway.Session.Player.Character;
-                    MyEntity charent = charac as MyEntity;
+                    var characSound = MyAPIGateway.Session.Player.Character;
+                    MyEntity charent = characSound as MyEntity;
                     emitter = new MyEntity3DSoundEmitter(charent);
                     emitter.SetPosition(MyAPIGateway.Session.Camera.WorldMatrix.Translation);
                     emitter.PlaySound(timeWarpUp);
                 }
 
                 MyFakes.SIMULATION_SPEED = 1;
-
+                MyFakes.CHARACTER_ANIMATION_SPEED = 1;
                 foreach (var effect in MyParticlesManager.Effects)
                 {
                     if (particleStore.ContainsKey(effect.Id))
@@ -197,7 +197,19 @@ namespace SlowMo
     {
         public void Init(object gameInstance)
         {
+            var harmony = new Harmony("SlowMo");
+            harmony.PatchAll(Assembly.GetExecutingAssembly());
+        }
 
+        [HarmonyPatch(typeof(MyCharacter))]
+        [HarmonyPatch("UpdateAnimationNewSystem")]
+        class Patch01
+        {
+            static void Prefix(MyCharacter __instance)
+            {
+                var newSpeed = MySession.Static.Settings.CharacterSpeedMultiplier * MyFakes.CHARACTER_ANIMATION_SPEED;
+                __instance.AnimationController.OtherLayersAnimationSpeed = newSpeed; 
+            }
         }
 
         public void Update()
