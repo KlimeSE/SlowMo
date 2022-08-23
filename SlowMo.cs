@@ -54,7 +54,7 @@ namespace SlowMo
 
         public override void UpdateAfterSimulation()
         {
-            if (MyAPIGateway.Session.OnlineMode != MyOnlineModeEnum.OFFLINE)
+            if (MyAPIGateway.Utilities.IsDedicated)
             {
                 return;
             }
@@ -68,7 +68,7 @@ namespace SlowMo
                 validInputThisTick = false;
             }
 
-            if (validInputThisTick && MyAPIGateway.Input.IsNewKeyPressed(MyKeys.R))
+            if (validInputThisTick && MyAPIGateway.Input.IsNewKeyPressed(MyKeys.F2))
             {
                 if (currentSlowState == SlowdownState.Idle)
                 {
